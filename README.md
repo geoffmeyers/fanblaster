@@ -14,4 +14,4 @@ requires that you have a copy of nvapi.dll somewhere on your machine (which will
 
 built on windows with mingw:
 
-> g++ fanblaster.cc -o fanblaster -lwinmm
+> g++ fanblaster.cc -o fanblaster -lwinmm -static-libgcc -static-libstdc++
