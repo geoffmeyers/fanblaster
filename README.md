@@ -14,4 +14,10 @@ requires that you have a copy of nvapi.dll somewhere on your machine (which will
 
 built on windows with mingw:
 
-> g++ fanblaster.cc -o fanblaster -lwinmm -static-libgcc -static-libstdc++
+> windres fanblaster.rc -O coff -o fanblaster.res
+
+> g++ fanblaster.cc fanblaster.res -o fanblaster.exe -lwinmm -static-libgcc -static-libstdc++
+
+example usage to alarm if temp goes above 65C:
+
+> fanblaster.exe 65

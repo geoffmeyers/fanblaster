@@ -1,0 +1,25 @@
+id ICON "fanblaster.ico"
+1 VERSIONINFO
+FILEVERSION     0,1,1,0
+PRODUCTVERSION  0,1,1,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Geoff Meyers"
+      VALUE "FileDescription", "FanBlaster"
+      VALUE "FileVersion", "0.1.1"
+      VALUE "InternalName", "fanblaster"
+      VALUE "LegalCopyright", ""
+      VALUE "OriginalFilename", "fanblaster.exe"
+      VALUE "ProductName", "FanBlaster"
+      VALUE "ProductVersion", "0.1.1"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
