@@ -41,6 +41,8 @@
  
 #include <windows.h>
 #include <iostream>
+
+#include <getopt.h>
  
 // magic numbers, do not change them
 #define NVAPI_MAX_PHYSICAL_GPUS   64
@@ -113,6 +115,54 @@ typedef int (*NvAPI_GPU_GetCoolerSettings_t)(int *handle, unsigned int, struct n
 typedef int (*NvAPI_GPU_SetCoolerSettings_t)(int *handle, unsigned int, struct nv_levels &);
 typedef int (*NvAPI_GPU_GetThermalSettings_t)(int *handle, unsigned int, struct nv_thermals &);
 
+
+static struct {
+  bool no_fan_adjust;
+  unsigned int alert_temp;
+  unsigned int fan_speed;
+} config;
+
+
+void usage(char *name) {
+  std::cout << "usage: " << name << " "
+            << "[-a alert_temp (default 70)] "
+            << "[-s fan_speed (default 100)] "
+            << "[-n (no fan adjust)]" << std::endl;
+}
+
+
+void get_params(int argc, char *argv[]) {
+
+  int opt;
+
+  config.no_fan_adjust = false;
+  config.alert_temp = 70;
+  config.fan_speed = 100;
+
+  while((opt = getopt(argc, argv, "a:ns:")) != -1) {
+    switch(opt) {
+      case 'a':
+        config.alert_temp = atoi(optarg);
+        break;
+      case 's':
+        config.fan_speed = atoi(optarg);
+        break;
+      case 'n':
+        config.no_fan_adjust = true;
+        break;
+      default:
+        std::cout << "issue parsing params" << std::endl;
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
+
+  if(config.fan_speed > 100) {
+    std::cout << "fan_speed should be between 0 and 100" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+}
+
 int main(int argc, char *argv[]) {   
 
   HMODULE hmod = LoadLibraryA("nvapi.dll");
@@ -122,14 +172,8 @@ int main(int argc, char *argv[]) {
     play_audio_alert();
     return 1;
   }
- 
-  unsigned int thermal_alert = 0;
-  if(argc != 2) {
-    std::cout << "usage: " << argv[0] << " [temp to alert at, 0 to disable]" << std::endl;
-    play_audio_alert();
-    return 1;
-  }
-  thermal_alert = atoi(argv[1]);
+
+  get_params(argc, argv); 
 
   // nvapi.dll internal function pointers
   NvAPI_QueryInterface_t         NvAPI_QueryInterface         = NULL;
@@ -204,13 +248,13 @@ int main(int argc, char *argv[]) {
   }
   std::cout << "api detected " << gpu_count << " nvidia gpu(s)." << std::endl << std::endl;
  
-  while(1) {
+  for(;;) {
 
-    if(!thermal_alert) {
+    if(!config.alert_temp) {
       std::cout << "WARNING: thermal alert disabled, pass non-zero value on command line to enable" << std::endl << std::endl;
     }
     else {
-      std::cout << "thermal alert enabled if temp goes above: " << thermal_alert << std::endl << std::endl;
+      std::cout << "thermal alert enabled if temp goes above: " << config.alert_temp << std::endl << std::endl;
     }
     
     for(int gpu_index = 0; gpu_index < gpu_count; gpu_index++) {
@@ -257,7 +301,7 @@ int main(int argc, char *argv[]) {
         std::cout << "    - default min temp: " << thermals.internal[x].default_min_temp << std::endl;
         std::cout << "    - default max temp: " << thermals.internal[x].default_max_temp << std::endl;
         std::cout << "    - target: " << thermals.internal[x].target << std::endl;
-        if(thermal_alert and thermals.internal[x].current_temp > thermal_alert) {
+        if(config.alert_temp and thermals.internal[x].current_temp > config.alert_temp) {
           std::cout << "WARNING: NvAPI_GPU_GetThermalSettings says temp is too high on gpu " << gpu_index << " sensor " << x << std::endl;
           play_alert = true;
         }
@@ -281,14 +325,16 @@ int main(int argc, char *argv[]) {
         std::cout << "    - rpms: " << gpu_tach[x] << std::endl;
       }
 
-      // now we set the fan speed
-      for(unsigned int x = 0; x < cooler.count; x++) {
-        levels.internal[x].level = 100; // gogo full blast
-        levels.internal[x].policy = cooler.internal[x].current_policy;
-        retval = NvAPI_GPU_SetCoolerSettings(gpu_handles[gpu_index], 0, levels);
-        if(retval != 0) {
-          std::cout << "WARNING: NvAPI_GPU_SetCoolerSettings retval was not 0!  got instead: " << retval << std::endl;
-          play_alert = true;
+      if(config.no_fan_adjust == false) {
+        // now we set the fan speed
+        for(unsigned int x = 0; x < cooler.count; x++) {
+          levels.internal[x].level = config.fan_speed; // gogo full blast
+          levels.internal[x].policy = cooler.internal[x].current_policy;
+          retval = NvAPI_GPU_SetCoolerSettings(gpu_handles[gpu_index], 0, levels);
+          if(retval != 0) {
+            std::cout << "WARNING: NvAPI_GPU_SetCoolerSettings retval was not 0!  got instead: " << retval << std::endl;
+            play_alert = true;
+          }
         }
       }
 

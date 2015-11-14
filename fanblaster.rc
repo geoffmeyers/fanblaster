@@ -1,7 +1,7 @@
 id ICON "fanblaster.ico"
 1 VERSIONINFO
-FILEVERSION     0,1,1,0
-PRODUCTVERSION  0,1,1,0
+FILEVERSION     0,1,2,0
+PRODUCTVERSION  0,1,2,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -9,12 +9,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Geoff Meyers"
       VALUE "FileDescription", "FanBlaster"
-      VALUE "FileVersion", "0.1.1"
+      VALUE "FileVersion", "0.1.2"
       VALUE "InternalName", "fanblaster"
       VALUE "LegalCopyright", ""
       VALUE "OriginalFilename", "fanblaster.exe"
       VALUE "ProductName", "FanBlaster"
-      VALUE "ProductVersion", "0.1.1"
+      VALUE "ProductVersion", "0.1.2"
     END
   END
 
